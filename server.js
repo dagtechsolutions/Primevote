@@ -53,6 +53,9 @@ app.post('/api/contestants', upload.single('photo'), async (req, res) => {
   try {
     const photoPath = req.file ? `/uploads/${req.file.filename}` : '';
     const { name, positionKey, positionLabel, description } = req.body;
+    if (!name || !positionKey || !positionLabel || !description) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
     const newContestant = new Contestant({ name, positionKey, positionLabel, description, photo: photoPath });
     await newContestant.save();
     res.json(newContestant);
@@ -161,7 +164,7 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
-// Root route (optional, can serve index.html or give a friendly message)
+// Root route (serve index.html)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
