@@ -6,14 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="primevote.css">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <header>
   <h1>PrimeVote</h1>
   <div id="vote-status" class="mt-2 text-lg"></div>
 </header>
-
 <main>
   <!-- Login Section -->
   <section id="login-section" class="bg-white p-6 rounded-lg shadow mb-10">
@@ -78,223 +76,258 @@
     <div id="results"></div>
   </section>
 </main>
-
 <script>
-const BACKEND_URL = ""; // If serving from same domain, leave blank
+document.addEventListener('DOMContentLoaded', function() {
+  let isAdmin = false;
+  let voterId = '';
+  let voterVotes = {};
 
-// --- Simple Auth State ---
-let isAdmin = false;
-let voterId = '';
-let voterVotes = {};
-
-// --- Login Logic ---
-document.getElementById('admin-login-form').onsubmit = (e) => {
-  e.preventDefault();
-  const pwd = document.getElementById('admin-password-input').value;
-  if (pwd === "admin2024") { // Hardcoded for demo, replace for real auth
-    isAdmin = true;
-    voterId = '';
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('admin-section').classList.remove('hidden');
-    document.getElementById('voter-section').classList.add('hidden');
-    refreshAdminContestants();
-    refreshVotingState();
-    renderResults();
-    document.getElementById('login-status').textContent = '';
-  } else {
-    document.getElementById('login-status').textContent = "Invalid admin password!";
-  }
-};
-
-document.getElementById('voter-login-form').onsubmit = async (e) => {
-  e.preventDefault();
-  voterId = document.getElementById('voter-id-input').value.trim();
-  if (!voterId) return;
-  const res = await fetchJSON(`/api/voter-auth`, {
-    method: 'POST', body: JSON.stringify({voterId})
-  });
-  if (res.error) {
-    document.getElementById('login-status').textContent = "Invalid Voter ID!";
-    return;
-  }
-  isAdmin = false;
-  voterVotes = Object.fromEntries(Object.entries(res.votes||{}));
-  document.getElementById('login-section').classList.add('hidden');
-  document.getElementById('admin-section').classList.add('hidden');
-  document.getElementById('voter-section').classList.remove('hidden');
-  document.getElementById('voting-panel').classList.remove('hidden');
-  document.getElementById('voter-status').textContent = "You are eligible to vote for open positions.";
-  renderVotingPanel();
-  renderResults();
-  document.getElementById('login-status').textContent = '';
-};
-
-document.getElementById('admin-logout-btn').onclick = () => {
-  isAdmin = false;
-  document.getElementById('login-section').classList.remove('hidden');
-  document.getElementById('admin-section').classList.add('hidden');
-};
-document.getElementById('voter-logout-btn').onclick = () => {
-  voterId = '';
-  voterVotes = {};
-  document.getElementById('login-section').classList.remove('hidden');
-  document.getElementById('voter-section').classList.add('hidden');
-};
-
-// ---- Admin Logic ----
-async function refreshAdminContestants() {
-  const listEl = document.getElementById('admin-contestant-list');
-  const contestants = await fetchJSON(`/api/contestants`);
-  listEl.innerHTML = '';
-  contestants.forEach(c => {
-    let li = document.createElement('li');
-    li.textContent = `${c.name} (${c.positionLabel}) - ${c.description}`;
-    listEl.appendChild(li);
-  });
-}
-document.getElementById('add-contestant-form').onsubmit = async (e) => {
-  e.preventDefault();
-  const formData = new FormData();
-  formData.append('name', document.getElementById('contestant-name').value);
-  formData.append('positionKey', document.getElementById('contestant-position-key').value);
-  formData.append('positionLabel', document.getElementById('contestant-position-label').value);
-  formData.append('description', document.getElementById('contestant-description').value);
-  if (document.getElementById('contestant-photo').files[0])
-    formData.append('photo', document.getElementById('contestant-photo').files[0]);
-  try {
-    const res = await fetch(`/api/contestants`, {
-      method: 'POST', body: formData
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      document.getElementById('add-contestant-status').textContent = err.error || "Error adding contestant";
-    } else {
-      document.getElementById('add-contestant-status').textContent = '';
-      e.target.reset();
+  // --- Login logic ---
+  document.getElementById('admin-login-form').onsubmit = (e) => {
+    e.preventDefault();
+    const pwd = document.getElementById('admin-password-input').value;
+    if (pwd === "admin2024") {
+      isAdmin = true;
+      voterId = '';
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('admin-section').classList.remove('hidden');
+      document.getElementById('voter-section').classList.add('hidden');
+      document.getElementById('login-status').textContent = '';
       refreshAdminContestants();
+      refreshVotingState();
       renderResults();
+    } else {
+      document.getElementById('login-status').textContent = "Invalid admin password!";
     }
-  } catch (err) {
-    document.getElementById('add-contestant-status').textContent = 'Network error';
+  };
+
+  document.getElementById('voter-login-form').onsubmit = async (e) => {
+    e.preventDefault();
+    voterId = document.getElementById('voter-id-input').value.trim();
+    if (!voterId) return;
+    try {
+      const res = await fetchJSON('/api/voter-auth', {
+        method: 'POST', body: JSON.stringify({voterId})
+      });
+      if (res.error) {
+        document.getElementById('login-status').textContent = "Invalid Voter ID!";
+        return;
+      }
+      isAdmin = false;
+      voterVotes = Object.fromEntries(Object.entries(res.votes||{}));
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('admin-section').classList.add('hidden');
+      document.getElementById('voter-section').classList.remove('hidden');
+      document.getElementById('voting-panel').classList.remove('hidden');
+      document.getElementById('voter-status').textContent = "You are eligible to vote for open positions.";
+      document.getElementById('login-status').textContent = '';
+      renderVotingPanel();
+      renderResults();
+    } catch {
+      document.getElementById('login-status').textContent = "Login error";
+    }
+  };
+
+  document.getElementById('admin-logout-btn').onclick = () => {
+    isAdmin = false;
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('admin-section').classList.add('hidden');
+  };
+  document.getElementById('voter-logout-btn').onclick = () => {
+    voterId = '';
+    voterVotes = {};
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('voter-section').classList.add('hidden');
+  };
+
+  // --- Admin Logic ---
+  async function refreshAdminContestants() {
+    try {
+      const listEl = document.getElementById('admin-contestant-list');
+      const contestants = await fetchJSON(`/api/contestants`);
+      listEl.innerHTML = '';
+      contestants.forEach(c => {
+        let li = document.createElement('li');
+        li.textContent = `${c.name} (${c.positionLabel}) - ${c.description}`;
+        listEl.appendChild(li);
+      });
+    } catch (err) {
+      document.getElementById('admin-contestant-list').innerHTML = "<li>Error loading contestants</li>";
+    }
   }
-};
 
-document.getElementById('upload-voters-btn').onclick = async () => {
-  const lines = document.getElementById('voters-textarea').value.trim().split('\n').map(x=>x.trim()).filter(x=>x);
-  if (lines.length !== 140) {
-    alert("You must enter exactly 140 voter IDs (one per line).");
-    return;
-  }
-  await fetchJSON(`/api/voters`, {
-    method: 'POST',
-    body: JSON.stringify({voterIds: lines})
-  });
-  alert("Voters uploaded!");
-};
+  document.getElementById('add-contestant-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('name', document.getElementById('contestant-name').value);
+    formData.append('positionKey', document.getElementById('contestant-position-key').value);
+    formData.append('positionLabel', document.getElementById('contestant-position-label').value);
+    formData.append('description', document.getElementById('contestant-description').value);
+    if (document.getElementById('contestant-photo').files[0])
+      formData.append('photo', document.getElementById('contestant-photo').files[0]);
+    try {
+      const res = await fetch(`/api/contestants`, {
+        method: 'POST', body: formData
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        document.getElementById('add-contestant-status').textContent = err.error || "Error adding contestant";
+      } else {
+        document.getElementById('add-contestant-status').textContent = '';
+        e.target.reset();
+        refreshAdminContestants();
+        renderResults();
+      }
+    } catch (err) {
+      document.getElementById('add-contestant-status').textContent = 'Network error';
+    }
+  };
 
-async function refreshVotingState() {
-  const res = await fetchJSON(`/api/voting-state`);
-  document.getElementById('current-voting-state').textContent = res.votingOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
-  document.getElementById('toggle-voting-btn').textContent = res.votingOpen ? 'Close Voting' : 'Open Voting';
-  document.getElementById('vote-status').textContent = res.votingOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
-}
-document.getElementById('toggle-voting-btn').onclick = async () => {
-  const state = await fetchJSON(`/api/voting-state`);
-  await fetchJSON(`/api/voting-state`, {
-    method: 'POST',
-    body: JSON.stringify({open: !state.votingOpen}),
-  });
-  refreshVotingState();
-};
-refreshVotingState();
-
-// ---- Voter Logic ----
-async function renderVotingPanel() {
-  // Get contestant groups
-  const res = await fetchJSON(`/api/results`);
-  const positionsList = document.getElementById('positions-list');
-  positionsList.innerHTML = '';
-  for (const [pkey, pdata] of Object.entries(res)) {
-    const votedFor = voterVotes[pkey];
-    let html = `<div class="mb-6"><div class="font-bold mb-1">${pdata.label}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">`;
-    pdata.list.forEach(cont => {
-      html += `
-        <label class="bg-gray-100 rounded p-3 flex items-center space-x-3 cursor-pointer">
-          <input type="radio" name="vote_${pkey}" value="${cont._id}" ${votedFor==cont._id?'checked':''} ${votedFor?'disabled':''}>
-          <img src="${cont.photo||'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover"/>
-          <span>
-            <span class="font-semibold">${cont.name}</span>
-            <span class="block text-xs text-gray-500">${cont.description||''}</span>
-          </span>
-        </label>
-      `;
+  document.getElementById('upload-voters-btn').onclick = async () => {
+    const lines = document.getElementById('voters-textarea').value.trim().split('\n').map(x=>x.trim()).filter(x=>x);
+    if (lines.length !== 140) {
+      alert("You must enter exactly 140 voter IDs (one per line).");
+      return;
+    }
+    await fetchJSON(`/api/voters`, {
+      method: 'POST',
+      body: JSON.stringify({voterIds: lines})
     });
-    html += `</div>`;
-    if (votedFor) html += `<div class="text-green-700 mt-2">Voted</div>`;
-    html += `</div>`;
-    positionsList.innerHTML += html;
-  }
-}
+    alert("Voters uploaded!");
+  };
 
-// Vote submission
-document.getElementById('voting-panel').onsubmit = async (e) => {
-  e.preventDefault();
-  // Gather votes for positions not yet voted
-  const votes = {};
-  Array.from(document.querySelectorAll('[name^="vote_"]')).forEach(inp => {
-    if (inp.checked && !voterVotes[inp.name.slice(5)]) {
-      votes[inp.name.slice(5)] = inp.value;
+  async function refreshVotingState() {
+    try {
+      const res = await fetchJSON(`/api/voting-state`);
+      document.getElementById('current-voting-state').textContent = res && res.votingOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
+      document.getElementById('toggle-voting-btn').textContent = res && res.votingOpen ? 'Close Voting' : 'Open Voting';
+      document.getElementById('vote-status').textContent = res && res.votingOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
+    } catch (err) {
+      document.getElementById('current-voting-state').textContent = "Voting state unavailable";
+      document.getElementById('vote-status').textContent = "Voting state unavailable";
     }
-  });
-  if (Object.keys(votes).length === 0) {
-    alert("You have already voted for all positions, or haven't selected any new choices.");
-    return;
   }
-  await fetchJSON(`/api/vote`, {
-    method: 'POST', body: JSON.stringify({voterId, votes})
-  });
-  alert("Your votes have been recorded!");
-  // Refresh voterVotes and panel
-  const res = await fetchJSON(`/api/voter-auth`, {
-    method: 'POST', body: JSON.stringify({voterId})
-  });
-  voterVotes = Object.fromEntries(Object.entries(res.votes || {}));
-  renderVotingPanel();
+  document.getElementById('toggle-voting-btn').onclick = async () => {
+    try {
+      const state = await fetchJSON(`/api/voting-state`);
+      await fetchJSON(`/api/voting-state`, {
+        method: 'POST',
+        body: JSON.stringify({open: !(state && state.votingOpen)})
+      });
+      refreshVotingState();
+    } catch {
+      alert("Unable to toggle voting state.");
+    }
+  };
+
+  // ---- Voter Logic ----
+  async function renderVotingPanel() {
+    try {
+      const res = await fetchJSON(`/api/results`);
+      const positionsList = document.getElementById('positions-list');
+      positionsList.innerHTML = '';
+      if (!res || typeof res !== "object") {
+        positionsList.innerHTML = "<div>No positions found.</div>";
+        return;
+      }
+      for (const [pkey, pdata] of Object.entries(res)) {
+        const votedFor = voterVotes[pkey];
+        let html = `<div class="mb-6"><div class="font-bold mb-1">${pdata.label}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">`;
+        if (Array.isArray(pdata.list)) {
+          pdata.list.forEach(cont => {
+            html += `
+              <label class="bg-gray-100 rounded p-3 flex items-center space-x-3 cursor-pointer">
+                <input type="radio" name="vote_${pkey}" value="${cont._id}" ${votedFor==cont._id?'checked':''} ${votedFor?'disabled':''}>
+                <img src="${cont.photo||'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full object-cover"/>
+                <span>
+                  <span class="font-semibold">${cont.name}</span>
+                  <span class="block text-xs text-gray-500">${cont.description||''}</span>
+                </span>
+              </label>
+            `;
+          });
+        }
+        html += `</div>`;
+        if (votedFor) html += `<div class="text-green-700 mt-2">Voted</div>`;
+        html += `</div>`;
+        positionsList.innerHTML += html;
+      }
+    } catch (err) {
+      document.getElementById('positions-list').innerHTML = "<div>Error loading voting panel.</div>";
+    }
+  }
+
+  // Vote submission
+  document.getElementById('voting-panel').onsubmit = async (e) => {
+    e.preventDefault();
+    const votes = {};
+    Array.from(document.querySelectorAll('[name^="vote_"]')).forEach(inp => {
+      if (inp.checked && !voterVotes[inp.name.slice(5)]) {
+        votes[inp.name.slice(5)] = inp.value;
+      }
+    });
+    if (Object.keys(votes).length === 0) {
+      alert("You have already voted for all positions, or haven't selected any new choices.");
+      return;
+    }
+    try {
+      await fetchJSON(`/api/vote`, {
+        method: 'POST', body: JSON.stringify({voterId, votes})
+      });
+      alert("Your votes have been recorded!");
+      const res = await fetchJSON(`/api/voter-auth`, {
+        method: 'POST', body: JSON.stringify({voterId})
+      });
+      voterVotes = Object.fromEntries(Object.entries(res.votes || {}));
+      renderVotingPanel();
+      renderResults();
+    } catch (err) {
+      alert("Unable to submit votes.");
+    }
+  };
+
+  // ---- Live Results ----
+  async function renderResults() {
+    try {
+      const res = await fetchJSON(`/api/results`);
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      if (!res || typeof res !== "object") {
+        resultsDiv.innerHTML = "No results available.";
+        return;
+      }
+      for (const [pkey, pdata] of Object.entries(res)) {
+        resultsDiv.innerHTML += `<div class="mb-4"><div class="font-bold mb-1">${pdata.label}</div>`;
+        const totalVotes = Array.isArray(pdata.list) ? pdata.list.reduce((a,c)=>a+c.votes,0)||1 : 1;
+        if (Array.isArray(pdata.list)) {
+          pdata.list.forEach(c => {
+            const percent = c.votes/totalVotes*100;
+            resultsDiv.innerHTML += `
+              <div class="flex justify-between">
+                <span>${c.name}</span>
+                <span>${c.votes} votes (${percent.toFixed(1)}%)</span>
+              </div>
+              <div class="w-full bg-gray-200 h-2 rounded mb-1">
+                <div class="bg-purple-600 h-2 rounded" style="width:${percent}%;"></div>
+              </div>
+            `;
+          });
+        }
+        resultsDiv.innerHTML += `</div>`;
+      }
+    } catch (err) {
+      document.getElementById('results').innerHTML = "Error loading results.";
+    }
+  }
   renderResults();
-};
+  setInterval(renderResults, 2500);
 
-// ---- Live Results ----
-async function renderResults() {
-  const res = await fetchJSON(`/api/results`);
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '';
-  for (const [pkey, pdata] of Object.entries(res)) {
-    resultsDiv.innerHTML += `<div class="mb-4"><div class="font-bold mb-1">${pdata.label}</div>`;
-    // Bar
-    const totalVotes = pdata.list.reduce((a,c)=>a+c.votes,0)||1;
-    pdata.list.forEach(c => {
-      const percent = c.votes/totalVotes*100;
-      resultsDiv.innerHTML += `
-        <div class="flex justify-between">
-          <span>${c.name}</span>
-          <span>${c.votes} votes (${percent.toFixed(1)}%)</span>
-        </div>
-        <div class="w-full bg-gray-200 h-2 rounded mb-1">
-          <div class="bg-purple-600 h-2 rounded" style="width:${percent}%;"></div>
-        </div>
-      `;
-    });
-    resultsDiv.innerHTML += `</div>`;
+  // --- Helper ---
+  function fetchJSON(url, options={}) {
+    return fetch(url, {headers: {'Content-Type':'application/json'}, ...options})
+      .then(r => r.json());
   }
-}
-renderResults();
-setInterval(renderResults, 2500);
-
-// --- Helper ---
-function fetchJSON(url, options={}) {
-  return fetch(url, {headers: {'Content-Type':'application/json'}, ...options})
-    .then(r => r.json());
-}
+});
 </script>
 </body>
 </html>
