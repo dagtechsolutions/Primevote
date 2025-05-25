@@ -124,14 +124,13 @@ app.post('/api/voter-auth', async (req, res) => {
 // Voter: Submit votes for all positions (only once per position)
 app.post('/api/vote', async (req, res) => {
   try {
-    const { voterId, votes } = req.body; // votes: { president: contestantId, secretary: contestantId, ... }
+    const { voterId, votes } = req.body; // votes: { president: contestantId, ... }
     let votingState = await Settings.findOne();
     if (!votingState || !votingState.votingOpen) return res.status(403).json({ error: "Voting is not open" });
 
     const voter = await Voter.findOne({ voterId });
     if (!voter) return res.status(403).json({ error: "Invalid voter" });
 
-    // Only allow voting for positions the voter hasn't voted for yet
     let updated = false;
     for (const [pos, cid] of Object.entries(votes)) {
       if (!voter.votes.has(pos)) {
@@ -151,6 +150,9 @@ app.post('/api/vote', async (req, res) => {
 app.get('/api/results', async (req, res) => {
   try {
     const contestants = await Contestant.find();
+    if (!Array.isArray(contestants) || contestants.length === 0) {
+      return res.json({});
+    }
     const grouped = {};
     contestants.forEach(c => {
       if (!grouped[c.positionKey]) grouped[c.positionKey] = { label: c.positionLabel, list: [] };
