@@ -15,8 +15,22 @@
 </header>
 
 <main>
+  <!-- Login Section -->
+  <section id="login-section" class="bg-white p-6 rounded-lg shadow mb-10">
+    <h2>Login</h2>
+    <form id="admin-login-form" class="mb-3 flex items-center space-x-2">
+      <input type="password" id="admin-password-input" placeholder="Admin password" required>
+      <button type="submit">Admin Login</button>
+    </form>
+    <form id="voter-login-form" class="flex items-center space-x-2">
+      <input type="text" id="voter-id-input" placeholder="Enter your Voter ID" required>
+      <button type="submit">Voter Login</button>
+    </form>
+    <div id="login-status" class="text-red-600 mt-2"></div>
+  </section>
+
   <!-- Admin Section -->
-  <section id="admin-section" class="bg-white p-6 rounded-lg shadow mb-10">
+  <section id="admin-section" class="bg-white p-6 rounded-lg shadow mb-10 hidden">
     <h2>Admin Panel</h2>
     <div class="mb-4">
       <button id="toggle-voting-btn">Open Voting</button>
@@ -37,26 +51,25 @@
         <input type="file" id="contestant-photo" accept="image/*">
         <button type="submit">Add</button>
       </form>
+      <div id="add-contestant-status" class="text-red-600 mt-2"></div>
     </div>
     <div>
       <h3 class="font-semibold mb-1">Contestants</h3>
       <ul id="admin-contestant-list"></ul>
     </div>
     <div class="mt-4 text-sm text-gray-600">Note: Only admin can see this section.</div>
+    <button id="admin-logout-btn" class="mt-4">Logout</button>
   </section>
 
   <!-- Voter Section -->
-  <section id="voter-section" class="bg-white p-6 rounded-lg shadow mb-10">
-    <h2>Voter Login & Voting</h2>
-    <form id="voter-login-form" class="mb-5 flex items-center space-x-2">
-      <input type="text" id="voter-id-input" placeholder="Enter your Voter ID" required>
-      <button type="submit">Login</button>
-    </form>
+  <section id="voter-section" class="bg-white p-6 rounded-lg shadow mb-10 hidden">
+    <h2>Voter Voting</h2>
     <div id="voter-status" class="mb-5"></div>
     <form id="voting-panel" class="hidden">
       <div id="positions-list"></div>
       <button type="submit">Submit Votes</button>
     </form>
+    <button id="voter-logout-btn" class="mt-4">Logout</button>
   </section>
 
   <!-- Results Section -->
@@ -67,12 +80,71 @@
 </main>
 
 <script>
-const BACKEND_URL = 'http://localhost:4000'; // update as needed
+const BACKEND_URL = ""; // If serving from same domain, leave blank
+
+// --- Simple Auth State ---
+let isAdmin = false;
+let voterId = '';
+let voterVotes = {};
+
+// --- Login Logic ---
+document.getElementById('admin-login-form').onsubmit = (e) => {
+  e.preventDefault();
+  const pwd = document.getElementById('admin-password-input').value;
+  if (pwd === "admin2024") { // Hardcoded for demo, replace for real auth
+    isAdmin = true;
+    voterId = '';
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('admin-section').classList.remove('hidden');
+    document.getElementById('voter-section').classList.add('hidden');
+    refreshAdminContestants();
+    refreshVotingState();
+    renderResults();
+    document.getElementById('login-status').textContent = '';
+  } else {
+    document.getElementById('login-status').textContent = "Invalid admin password!";
+  }
+};
+
+document.getElementById('voter-login-form').onsubmit = async (e) => {
+  e.preventDefault();
+  voterId = document.getElementById('voter-id-input').value.trim();
+  if (!voterId) return;
+  const res = await fetchJSON(`/api/voter-auth`, {
+    method: 'POST', body: JSON.stringify({voterId})
+  });
+  if (res.error) {
+    document.getElementById('login-status').textContent = "Invalid Voter ID!";
+    return;
+  }
+  isAdmin = false;
+  voterVotes = Object.fromEntries(Object.entries(res.votes||{}));
+  document.getElementById('login-section').classList.add('hidden');
+  document.getElementById('admin-section').classList.add('hidden');
+  document.getElementById('voter-section').classList.remove('hidden');
+  document.getElementById('voting-panel').classList.remove('hidden');
+  document.getElementById('voter-status').textContent = "You are eligible to vote for open positions.";
+  renderVotingPanel();
+  renderResults();
+  document.getElementById('login-status').textContent = '';
+};
+
+document.getElementById('admin-logout-btn').onclick = () => {
+  isAdmin = false;
+  document.getElementById('login-section').classList.remove('hidden');
+  document.getElementById('admin-section').classList.add('hidden');
+};
+document.getElementById('voter-logout-btn').onclick = () => {
+  voterId = '';
+  voterVotes = {};
+  document.getElementById('login-section').classList.remove('hidden');
+  document.getElementById('voter-section').classList.add('hidden');
+};
 
 // ---- Admin Logic ----
 async function refreshAdminContestants() {
   const listEl = document.getElementById('admin-contestant-list');
-  const contestants = await fetchJSON(`${BACKEND_URL}/api/contestants`);
+  const contestants = await fetchJSON(`/api/contestants`);
   listEl.innerHTML = '';
   contestants.forEach(c => {
     let li = document.createElement('li');
@@ -89,12 +161,22 @@ document.getElementById('add-contestant-form').onsubmit = async (e) => {
   formData.append('description', document.getElementById('contestant-description').value);
   if (document.getElementById('contestant-photo').files[0])
     formData.append('photo', document.getElementById('contestant-photo').files[0]);
-  await fetch(`${BACKEND_URL}/api/contestants`, {
-    method: 'POST', body: formData
-  });
-  e.target.reset();
-  refreshAdminContestants();
-  renderResults();
+  try {
+    const res = await fetch(`/api/contestants`, {
+      method: 'POST', body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      document.getElementById('add-contestant-status').textContent = err.error || "Error adding contestant";
+    } else {
+      document.getElementById('add-contestant-status').textContent = '';
+      e.target.reset();
+      refreshAdminContestants();
+      renderResults();
+    }
+  } catch (err) {
+    document.getElementById('add-contestant-status').textContent = 'Network error';
+  }
 };
 
 document.getElementById('upload-voters-btn').onclick = async () => {
@@ -103,7 +185,7 @@ document.getElementById('upload-voters-btn').onclick = async () => {
     alert("You must enter exactly 140 voter IDs (one per line).");
     return;
   }
-  await fetchJSON(`${BACKEND_URL}/api/voters`, {
+  await fetchJSON(`/api/voters`, {
     method: 'POST',
     body: JSON.stringify({voterIds: lines})
   });
@@ -111,47 +193,25 @@ document.getElementById('upload-voters-btn').onclick = async () => {
 };
 
 async function refreshVotingState() {
-  const res = await fetchJSON(`${BACKEND_URL}/api/voting-state`);
+  const res = await fetchJSON(`/api/voting-state`);
   document.getElementById('current-voting-state').textContent = res.votingOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
   document.getElementById('toggle-voting-btn').textContent = res.votingOpen ? 'Close Voting' : 'Open Voting';
   document.getElementById('vote-status').textContent = res.votingOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
 }
 document.getElementById('toggle-voting-btn').onclick = async () => {
-  const state = await fetchJSON(`${BACKEND_URL}/api/voting-state`);
-  await fetchJSON(`${BACKEND_URL}/api/voting-state`, {
+  const state = await fetchJSON(`/api/voting-state`);
+  await fetchJSON(`/api/voting-state`, {
     method: 'POST',
     body: JSON.stringify({open: !state.votingOpen}),
   });
   refreshVotingState();
 };
-refreshAdminContestants();
 refreshVotingState();
 
 // ---- Voter Logic ----
-let voterId = '';
-let voterVotes = {};
-
-document.getElementById('voter-login-form').onsubmit = async (e) => {
-  e.preventDefault();
-  voterId = document.getElementById('voter-id-input').value.trim();
-  if (!voterId) return;
-  const res = await fetchJSON(`${BACKEND_URL}/api/voter-auth`, {
-    method: 'POST', body: JSON.stringify({voterId})
-  });
-  if (res.error) {
-    document.getElementById('voter-status').textContent = "Invalid Voter ID!";
-    document.getElementById('voting-panel').classList.add('hidden');
-    return;
-  }
-  voterVotes = Object.fromEntries(Object.entries(res.votes||{}));
-  document.getElementById('voter-status').textContent = "You are eligible to vote for open positions.";
-  document.getElementById('voting-panel').classList.remove('hidden');
-  renderVotingPanel();
-};
-
 async function renderVotingPanel() {
   // Get contestant groups
-  const res = await fetchJSON(`${BACKEND_URL}/api/results`);
+  const res = await fetchJSON(`/api/results`);
   const positionsList = document.getElementById('positions-list');
   positionsList.innerHTML = '';
   for (const [pkey, pdata] of Object.entries(res)) {
@@ -190,12 +250,12 @@ document.getElementById('voting-panel').onsubmit = async (e) => {
     alert("You have already voted for all positions, or haven't selected any new choices.");
     return;
   }
-  await fetchJSON(`${BACKEND_URL}/api/vote`, {
+  await fetchJSON(`/api/vote`, {
     method: 'POST', body: JSON.stringify({voterId, votes})
   });
   alert("Your votes have been recorded!");
   // Refresh voterVotes and panel
-  const res = await fetchJSON(`${BACKEND_URL}/api/voter-auth`, {
+  const res = await fetchJSON(`/api/voter-auth`, {
     method: 'POST', body: JSON.stringify({voterId})
   });
   voterVotes = Object.fromEntries(Object.entries(res.votes || {}));
@@ -205,7 +265,7 @@ document.getElementById('voting-panel').onsubmit = async (e) => {
 
 // ---- Live Results ----
 async function renderResults() {
-  const res = await fetchJSON(`${BACKEND_URL}/api/results`);
+  const res = await fetchJSON(`/api/results`);
   const resultsDiv = document.getElementById('results');
   resultsDiv.innerHTML = '';
   for (const [pkey, pdata] of Object.entries(res)) {
