@@ -117,6 +117,31 @@ textarea { min-height: 70px; resize: vertical; }
   button, input[type="submit"] { padding: 0.6em 1.2em; font-size: 0.9rem; color:#2e857f; }
   .grid-cols-1.sm\:grid-cols-2.md\:grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
 }
+/*footer section*/
+.footer_section {
+  font-weight: 500;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  padding: 20px;
+  background-color: #145816;
+}
+
+.footer_section p {
+  color: rgba(254, 254, 255, 0.7);
+  margin: 0;
+  text-align: center;
+}
+
+.footer_section a {
+  color: rgba(254, 254, 255, 0.7);
+}
+
+/* end footer section*/
+/*# sourceMappingURL=style.css.map */
 ::-webkit-input-placeholder { color: #6b7280; opacity: 0.8; } :-moz-placeholder { color: #6b7280; opacity: 0.8; }
 ::-moz-placeholder { color: #6b7280; opacity: 0.8; } :-ms-input-placeholder { color: #6b7280; opacity: 0.8; }
 ::placeholder { color: #6b7280; opacity: 0.8; }
