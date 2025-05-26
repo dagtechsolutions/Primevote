@@ -173,46 +173,35 @@ document.addEventListener('DOMContentLoaded', function() {
   async function fetchAPI(url, options = {}) {
     const defaultHeaders = {
       'Content-Type': 'application/json',
-      // Add other default headers like Authorization if needed
     };
-    
-    // For FormData, browser sets Content-Type automatically including boundary
     if (options.body instanceof FormData) {
       delete defaultHeaders['Content-Type'];
     }
-
     const config = {
       ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
+      headers: { ...defaultHeaders, ...options.headers, },
     };
-
     const response = await fetch(API_BASE_URL + url, config);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Request failed with status: ' + response.status }));
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
-    // Handle responses that might not be JSON (e.g., 204 No Content)
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json();
     }
-    return response.text(); // Or handle as blob, etc.
+    return response.text();
   }
 
   // --- Login/Logout Logic ---
   document.getElementById('admin-login-form').onsubmit = (e) => {
     e.preventDefault();
     if (adminPasswordInput.value === "admin2024") {
-      isAdmin = true;
-      voterId = '';
+      isAdmin = true; voterId = '';
       loginSection.classList.add('hidden');
       adminSection.classList.remove('hidden');
       voterSection.classList.add('hidden');
-      loginStatusEl.textContent = '';
-      adminPasswordInput.value = '';
+      loginStatusEl.textContent = ''; adminPasswordInput.value = '';
       initializeAdminPanel();
     } else {
       loginStatusEl.textContent = "Invalid admin password!";
@@ -222,27 +211,16 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('voter-login-form').onsubmit = async (e) => {
     e.preventDefault();
     const currentVoterId = voterIdInput.value.trim();
-    if (!currentVoterId) {
-        loginStatusEl.textContent = "Voter ID cannot be empty.";
-        return;
-    }
+    if (!currentVoterId) { loginStatusEl.textContent = "Voter ID cannot be empty."; return; }
     try {
-      const res = await fetchAPI('/api/voter-auth', {
-        method: 'POST', body: JSON.stringify({ voterId: currentVoterId })
-      });
-      isAdmin = false;
-      voterId = currentVoterId; // Set voterId upon successful login
+      const res = await fetchAPI('/api/voter-auth', { method: 'POST', body: JSON.stringify({ voterId: currentVoterId }) });
+      isAdmin = false; voterId = currentVoterId;
       voterVotes = res.votes || {};
-      loginSection.classList.add('hidden');
-      adminSection.classList.add('hidden');
-      voterSection.classList.remove('hidden');
+      loginSection.classList.add('hidden'); adminSection.classList.add('hidden'); voterSection.classList.remove('hidden');
       votingPanelForm.classList.remove('hidden');
       voterStatusEl.textContent = `Logged in as ${voterId}. You are eligible to vote.`;
-      loginStatusEl.textContent = '';
-      voterIdInput.value = '';
-      await renderVotingPanel();
-      await refreshVotingState(); // To show voter the current state
-      await renderResults();
+      loginStatusEl.textContent = ''; voterIdInput.value = '';
+      await renderVotingPanel(); await refreshVotingState(); await renderResults();
     } catch (error) {
       loginStatusEl.textContent = error.message || "Login error. Invalid Voter ID or server issue.";
       console.error("Voter login error:", error);
@@ -251,53 +229,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('admin-logout-btn').onclick = () => {
     isAdmin = false;
-    loginSection.classList.remove('hidden');
-    adminSection.classList.add('hidden');
-    editContestantSection.classList.add('hidden'); // Hide form on logout
-    showAddContestantFormBtn.classList.remove('hidden');
+    loginSection.classList.remove('hidden'); adminSection.classList.add('hidden');
+    editContestantSection.classList.add('hidden'); showAddContestantFormBtn.classList.remove('hidden');
   };
-
   document.getElementById('voter-logout-btn').onclick = () => {
-    voterId = '';
-    voterVotes = {};
-    loginSection.classList.remove('hidden');
-    voterSection.classList.add('hidden');
-    positionsListEl.innerHTML = ''; // Clear voting panel
+    voterId = ''; voterVotes = {};
+    loginSection.classList.remove('hidden'); voterSection.classList.add('hidden');
+    positionsListEl.innerHTML = '';
   };
 
-  // --- Admin Panel Initialization ---
   function initializeAdminPanel() {
-    refreshAdminContestants();
-    refreshAdminVoters();
-    refreshVotingState();
-    renderResults(); // Admin should also see results
-    hideContestantForm(); // Ensure form is hidden initially
+    refreshAdminContestants(); refreshAdminVoters(); refreshVotingState();
+    renderResults(); hideContestantForm();
   }
 
-  // --- Admin: Contestant Management ---
   showAddContestantFormBtn.onclick = () => {
-    contestantForm.reset();
-    contestantIdEditInput.value = '';
+    contestantForm.reset(); contestantIdEditInput.value = '';
     contestantFormTitle.textContent = 'Add New Contestant';
     submitContestantBtn.textContent = 'Add Contestant';
     currentPhotoAdminInfoEl.textContent = '';
     removeContestantPhotoCheckbox.checked = false;
-    removeContestantPhotoCheckbox.parentElement.classList.add('hidden'); // Hide remove checkbox for new adds
+    removeContestantPhotoCheckbox.parentElement.classList.add('hidden');
     editContestantSection.classList.remove('hidden');
     showAddContestantFormBtn.classList.add('hidden');
     contestantFormStatusEl.textContent = '';
   };
-
-  cancelEditContestantBtn.onclick = () => {
-    hideContestantForm();
-  };
-
+  cancelEditContestantBtn.onclick = () => { hideContestantForm(); };
   function hideContestantForm() {
-    editContestantSection.classList.add('hidden');
-    showAddContestantFormBtn.classList.remove('hidden');
-    contestantForm.reset();
-    contestantIdEditInput.value = '';
-    contestantFormStatusEl.textContent = '';
+    editContestantSection.classList.add('hidden'); showAddContestantFormBtn.classList.remove('hidden');
+    contestantForm.reset(); contestantIdEditInput.value = ''; contestantFormStatusEl.textContent = '';
   }
 
   async function refreshAdminContestants() {
@@ -305,27 +265,26 @@ document.addEventListener('DOMContentLoaded', function() {
       const contestants = await fetchAPI(`/api/contestants`);
       adminContestantListEl.innerHTML = '';
       if (!contestants || contestants.length === 0) {
-        adminContestantListEl.innerHTML = '<li>No contestants added yet.</li>';
-        return;
+        adminContestantListEl.innerHTML = '<li>No contestants added yet.</li>'; return;
       }
       contestants.forEach(c => {
         const li = document.createElement('li');
         li.className = 'p-2 border rounded-md flex justify-between items-center';
         li.innerHTML = `
-          <div class="flex-grow">
-            <span class="font-semibold">${c.name}</span> (${c.positionLabel})
-            <p class="text-sm text-gray-600">${c.description}</p>
-            ${c.photo ? `<img src="${API_BASE_URL}${c.photo}" alt="${c.name}" class="admin-contestant-thumb">` : '<p class="text-xs text-gray-400">No photo</p>'}
+          <div class="flex-grow flex items-center space-x-3">
+            ${c.photo ? `<img src="${API_BASE_URL}${c.photo}" alt="${c.name}" class="admin-contestant-thumb">` : '<div class="admin-contestant-thumb-placeholder">No Img</div>'}
+            <div>
+              <span class="font-semibold">${c.name}</span> (${c.positionLabel})
+              <p class="text-sm text-gray-600">${c.description}</p>
+            </div>
           </div>
-          <div class="space-x-2">
-            <button data-id="${c._id}" class="edit-contestant-btn text-sm bg-blue-500 hover:bg-blue-600">Edit</button>
+          <div class="space-x-2 button-group">
+            <button data-id="${c._id}" class="edit-contestant-btn text-sm">Edit</button>
             <button data-id="${c._id}" class="delete-contestant-btn text-sm bg-red-500 hover:bg-red-600">Delete</button>
-          </div>
-        `;
+          </div>`;
         adminContestantListEl.appendChild(li);
       });
 
-      // Add event listeners for edit/delete
       document.querySelectorAll('.edit-contestant-btn').forEach(btn => {
         btn.onclick = async (e) => {
           const id = e.target.dataset.id;
@@ -338,14 +297,11 @@ document.addEventListener('DOMContentLoaded', function() {
             contestantPositionKeyInput.value = contestant.positionKey;
             contestantPositionLabelInput.value = contestant.positionLabel;
             contestantDescriptionInput.value = contestant.description;
-            contestantPhotoInput.value = ''; // Clear file input
+            contestantPhotoInput.value = '';
             currentPhotoAdminInfoEl.textContent = contestant.photo ? `Current: ${contestant.photo.split('/').pop()}` : 'No current photo.';
             removeContestantPhotoCheckbox.checked = false;
             removeContestantPhotoCheckbox.parentElement.classList.remove('hidden');
-
-
-            editContestantSection.classList.remove('hidden');
-            showAddContestantFormBtn.classList.add('hidden');
+            editContestantSection.classList.remove('hidden'); showAddContestantFormBtn.classList.add('hidden');
             contestantFormStatusEl.textContent = '';
           }
         };
@@ -354,21 +310,15 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.onclick = async (e) => {
           const id = e.target.dataset.id;
           const contestant = contestants.find(con => con._id === id);
-          if (confirm(`Are you sure you want to delete ${contestant ? contestant.name : 'this contestant'}? This action cannot be undone.`)) {
+          if (confirm(`Are you sure you want to delete ${contestant ? contestant.name : 'this contestant'}?`)) {
             try {
               await fetchAPI(`/api/contestants/${id}`, { method: 'DELETE' });
-              contestantFormStatusEl.textContent = '';
-              refreshAdminContestants();
-              renderResults(); // Update results after deletion
-            } catch (err) {
-              contestantFormStatusEl.textContent = `Error: ${err.message}`;
-            }
+              refreshAdminContestants(); renderResults();
+            } catch (err) { contestantFormStatusEl.textContent = `Error: ${err.message}`; }
           }
         };
       });
-    } catch (err) {
-      adminContestantListEl.innerHTML = `<li>Error loading contestants: ${err.message}</li>`;
-    }
+    } catch (err) { adminContestantListEl.innerHTML = `<li>Error loading contestants: ${err.message}</li>`; }
   }
 
   contestantForm.onsubmit = async (e) => {
@@ -379,128 +329,85 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append('positionKey', contestantPositionKeyInput.value);
     formData.append('positionLabel', contestantPositionLabelInput.value);
     formData.append('description', contestantDescriptionInput.value);
-    if (contestantPhotoInput.files[0]) {
-      formData.append('photo', contestantPhotoInput.files[0]);
-    }
-    if (id && removeContestantPhotoCheckbox.checked) {
-        formData.append('removePhoto', 'true');
-    }
-
-
+    if (contestantPhotoInput.files[0]) formData.append('photo', contestantPhotoInput.files[0]);
+    if (id && removeContestantPhotoCheckbox.checked) formData.append('removePhoto', 'true');
     const url = id ? `/api/contestants/${id}` : '/api/contestants';
     const method = id ? 'PUT' : 'POST';
-
     try {
-      await fetchAPI(url, { method: method, body: formData }); // fetchAPI handles FormData Content-Type
-      contestantFormStatusEl.textContent = '';
-      hideContestantForm();
-      refreshAdminContestants();
-      renderResults(); // Update results after add/edit
-    } catch (err) {
-      contestantFormStatusEl.textContent = `Error: ${err.message}`;
-    }
+      await fetchAPI(url, { method: method, body: formData });
+      hideContestantForm(); refreshAdminContestants(); renderResults();
+    } catch (err) { contestantFormStatusEl.textContent = `Error: ${err.message}`; }
   };
   
-  // --- Admin: Voter Management ---
   uploadVotersBtn.onclick = async () => {
     const lines = votersTextarea.value.trim().split('\n').map(x => x.trim()).filter(x => x);
     if (lines.length !== 140) {
-      uploadVotersStatusEl.textContent = "Error: You must enter exactly 140 voter IDs (one per line).";
-      uploadVotersStatusEl.className = "text-sm mt-1 text-red-600";
-      return;
+      uploadVotersStatusEl.textContent = "Error: Must be 140 voter IDs.";
+      uploadVotersStatusEl.className = "text-sm mt-1 text-red-600"; return;
     }
     try {
-        const result = await fetchAPI(`/api/voters`, {
-            method: 'POST',
-            body: JSON.stringify({ voterIds: lines })
-        });
-        uploadVotersStatusEl.textContent = result.message || "Voters uploaded successfully!";
-        uploadVotersStatusEl.className = "text-sm mt-1 text-green-700";
-        votersTextarea.value = ''; // Clear textarea
-        refreshAdminVoters(); // Refresh the list
+      const result = await fetchAPI(`/api/voters`, { method: 'POST', body: JSON.stringify({ voterIds: lines }) });
+      uploadVotersStatusEl.textContent = result.message || "Voters uploaded!";
+      uploadVotersStatusEl.className = "text-sm mt-1 text-green-700";
+      votersTextarea.value = ''; refreshAdminVoters();
     } catch (err) {
-        uploadVotersStatusEl.textContent = `Error: ${err.message}`;
-        uploadVotersStatusEl.className = "text-sm mt-1 text-red-600";
+      uploadVotersStatusEl.textContent = `Error: ${err.message}`;
+      uploadVotersStatusEl.className = "text-sm mt-1 text-red-600";
     }
   };
 
   async function refreshAdminVoters() {
     try {
-        const voters = await fetchAPI('/api/admin/voters');
-        adminVotersListEl.innerHTML = '';
-        voterCountEl.textContent = voters.length;
-        if (!voters || voters.length === 0) {
-            adminVotersListEl.innerHTML = '<li>No voters found. Use bulk upload to add voters.</li>';
-            return;
-        }
-        voters.forEach(voter => {
-            const li = document.createElement('li');
-            li.className = 'text-sm p-1.5 border-b flex justify-between items-center';
-            li.innerHTML = `
-                <span class="voter-id-text">${voter.voterId}</span>
-                <div class="space-x-1">
-                    <button data-id="${voter._id}" data-voterid="${voter.voterId}" class="edit-voter-btn text-xs bg-blue-500 hover:bg-blue-600 p-1 rounded">Edit ID</button>
-                    <button data-id="${voter._id}" data-voterid="${voter.voterId}" class="delete-voter-btn text-xs bg-red-500 hover:bg-red-600 p-1 rounded">Delete</button>
-                </div>
-            `;
-            adminVotersListEl.appendChild(li);
-        });
+      const voters = await fetchAPI('/api/admin/voters');
+      adminVotersListEl.innerHTML = ''; voterCountEl.textContent = voters.length;
+      if (!voters || voters.length === 0) {
+        adminVotersListEl.innerHTML = '<li>No voters found.</li>'; return;
+      }
+      voters.forEach(voter => {
+        const li = document.createElement('li');
+        li.className = 'text-sm p-1.5 border-b flex justify-between items-center';
+        li.innerHTML = `
+          <span class="voter-id-text">${voter.voterId}</span>
+          <div class="space-x-1 button-group">
+            <button data-id="${voter._id}" data-voterid="${voter.voterId}" class="edit-voter-btn text-xs p-1 rounded">Edit ID</button>
+            <button data-id="${voter._id}" data-voterid="${voter.voterId}" class="delete-voter-btn text-xs bg-red-500 hover:bg-red-600 p-1 rounded">Delete</button>
+          </div>`;
+        adminVotersListEl.appendChild(li);
+      });
 
-        document.querySelectorAll('.edit-voter-btn').forEach(btn => {
-            btn.onclick = async (e) => {
-                const voterMongoId = e.target.dataset.id;
-                const currentVoterId = e.target.dataset.voterid;
-                const newVoterId = prompt(`Enter new Voter ID for "${currentVoterId}":`, currentVoterId);
-                if (newVoterId && newVoterId.trim() !== '' && newVoterId.trim() !== currentVoterId) {
-                    try {
-                        await fetchAPI(`/api/admin/voters/${voterMongoId}`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ newVoterId: newVoterId.trim() })
-                        });
-                        adminVotersStatusEl.textContent = `Voter ID updated.`;
-                        adminVotersStatusEl.className = "text-sm mt-1 text-green-700";
-                        refreshAdminVoters();
-                    } catch (err) {
-                        adminVotersStatusEl.textContent = `Error: ${err.message}`;
-                        adminVotersStatusEl.className = "text-sm mt-1 text-red-600";
-                    }
-                } else if (newVoterId && newVoterId.trim() === currentVoterId) {
-                    // No change
-                } else if (newVoterId !== null) { // Not cancelled, but empty
-                    adminVotersStatusEl.textContent = "Voter ID cannot be empty.";
-                    adminVotersStatusEl.className = "text-sm mt-1 text-red-600";
-                }
-            };
-        });
-
-        document.querySelectorAll('.delete-voter-btn').forEach(btn => {
-            btn.onclick = async (e) => {
-                const voterMongoId = e.target.dataset.id;
-                const voterIdToDelete = e.target.dataset.voterid;
-                if (confirm(`Are you sure you want to delete voter "${voterIdToDelete}"? This may affect their ability to log in if they haven't voted. This action cannot be undone.`)) {
-                    try {
-                        await fetchAPI(`/api/admin/voters/${voterMongoId}`, { method: 'DELETE' });
-                        adminVotersStatusEl.textContent = `Voter "${voterIdToDelete}" deleted.`;
-                        adminVotersStatusEl.className = "text-sm mt-1 text-green-700";
-                        refreshAdminVoters();
-                    } catch (err) {
-                        adminVotersStatusEl.textContent = `Error: ${err.message}`;
-                        adminVotersStatusEl.className = "text-sm mt-1 text-red-600";
-                    }
-                }
-            };
-        });
-
+      document.querySelectorAll('.edit-voter-btn').forEach(btn => {
+        btn.onclick = async (e) => {
+          const voterMongoId = e.target.dataset.id; const currentVoterId = e.target.dataset.voterid;
+          const newVoterId = prompt(`Enter new Voter ID for "${currentVoterId}":`, currentVoterId);
+          if (newVoterId && newVoterId.trim() !== '' && newVoterId.trim() !== currentVoterId) {
+            try {
+              await fetchAPI(`/api/admin/voters/${voterMongoId}`, { method: 'PUT', body: JSON.stringify({ newVoterId: newVoterId.trim() }) });
+              adminVotersStatusEl.textContent = `Voter ID updated.`; adminVotersStatusEl.className = "text-sm mt-1 text-green-700";
+              refreshAdminVoters();
+            } catch (err) { adminVotersStatusEl.textContent = `Error: ${err.message}`; adminVotersStatusEl.className = "text-sm mt-1 text-red-600"; }
+          } else if (newVoterId && newVoterId.trim() === currentVoterId) { /* No change */ }
+            else if (newVoterId !== null) { adminVotersStatusEl.textContent = "Voter ID cannot be empty."; adminVotersStatusEl.className = "text-sm mt-1 text-red-600"; }
+        };
+      });
+      document.querySelectorAll('.delete-voter-btn').forEach(btn => {
+        btn.onclick = async (e) => {
+          const voterMongoId = e.target.dataset.id; const voterIdToDelete = e.target.dataset.voterid;
+          if (confirm(`Delete voter "${voterIdToDelete}"?`)) {
+            try {
+              await fetchAPI(`/api/admin/voters/${voterMongoId}`, { method: 'DELETE' });
+              adminVotersStatusEl.textContent = `Voter "${voterIdToDelete}" deleted.`; adminVotersStatusEl.className = "text-sm mt-1 text-green-700";
+              refreshAdminVoters();
+            } catch (err) { adminVotersStatusEl.textContent = `Error: ${err.message}`; adminVotersStatusEl.className = "text-sm mt-1 text-red-600"; }
+          }
+        };
+      });
     } catch (err) {
-        adminVotersListEl.innerHTML = `<li>Error loading voters: ${err.message}</li>`;
-        adminVotersStatusEl.textContent = `Error loading voters: ${err.message}`;
-        adminVotersStatusEl.className = "text-sm mt-1 text-red-600";
-        voterCountEl.textContent = 'Error';
+      adminVotersListEl.innerHTML = `<li>Error loading voters: ${err.message}</li>`;
+      adminVotersStatusEl.textContent = `Error: ${err.message}`; adminVotersStatusEl.className = "text-sm mt-1 text-red-600";
+      voterCountEl.textContent = 'Error';
     }
-}
+  }
 
-
-  // --- Admin: Voting State ---
   async function refreshVotingState() {
     try {
       const res = await fetchAPI(`/api/voting-state`);
@@ -508,28 +415,30 @@ document.addEventListener('DOMContentLoaded', function() {
       currentVotingStateEl.textContent = isOpen ? 'Voting is OPEN' : 'Voting is CLOSED';
       currentVotingStateEl.className = isOpen ? 'font-semibold ml-2 text-green-600' : 'font-semibold ml-2 text-red-600';
       toggleVotingBtn.textContent = isOpen ? 'Close Voting' : 'Open Voting';
-      toggleVotingBtn.className = isOpen ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600';
+      toggleVotingBtn.className = isOpen ? 'bg-red-500 hover:bg-red-600' : ''; // Empty class will take default green
+      if (!isOpen && !toggleVotingBtn.classList.contains('bg-green-500')) { // Ensure Open button is green
+          toggleVotingBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+      } else if (isOpen) {
+          toggleVotingBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+      }
       voteStatusHeaderEl.textContent = isOpen ? 'Voting is currently OPEN' : 'Voting is currently CLOSED';
       voteStatusHeaderEl.className = isOpen ? 'mt-2 text-lg text-green-600 font-bold' : 'mt-2 text-lg text-red-600 font-bold';
-
-      // If voting is open and user is voter, enable submit button, else disable
       const submitVotesBtn = document.getElementById('submit-votes-btn');
       if (submitVotesBtn) {
-          if (isOpen && voterId && Object.keys(voterVotes).length < Object.keys(await fetchAPI('/api/results')).length) { // check if there are positions left to vote for
-              submitVotesBtn.disabled = false;
-              submitVotesBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          } else {
-              submitVotesBtn.disabled = true;
-              submitVotesBtn.classList.add('opacity-50', 'cursor-not-allowed');
-              if (!isOpen && voterId) voterStatusEl.textContent += " Voting is closed.";
-          }
+        const resultsData = await fetchAPI('/api/results').catch(() => ({}));
+        const totalPositions = Object.keys(resultsData).length;
+        const canStillVoteOnPositions = voterId && Object.keys(voterVotes).length < totalPositions;
+
+        if (isOpen && canStillVoteOnPositions) {
+            submitVotesBtn.disabled = false; submitVotesBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitVotesBtn.disabled = true; submitVotesBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            if (!isOpen && voterId) voterStatusEl.textContent += " Voting is closed.";
+        }
       }
-
-
     } catch (err) {
       const unavailableMsg = "Voting state unavailable";
-      currentVotingStateEl.textContent = unavailableMsg;
-      voteStatusHeaderEl.textContent = unavailableMsg;
+      currentVotingStateEl.textContent = unavailableMsg; voteStatusHeaderEl.textContent = unavailableMsg;
       currentVotingStateEl.className = 'font-semibold ml-2 text-yellow-600';
       voteStatusHeaderEl.className = 'mt-2 text-lg text-yellow-600 font-bold';
     }
@@ -538,164 +447,114 @@ document.addEventListener('DOMContentLoaded', function() {
   toggleVotingBtn.onclick = async () => {
     try {
       const state = await fetchAPI(`/api/voting-state`);
-      await fetchAPI(`/api/voting-state`, {
-        method: 'POST',
-        body: JSON.stringify({open: !(state && state.votingOpen)})
-      });
-      refreshVotingState();
-      renderVotingPanel(); // Re-render to enable/disable radio buttons based on new state
-    } catch {
-      alert("Unable to toggle voting state.");
-    }
+      await fetchAPI(`/api/voting-state`, { method: 'POST', body: JSON.stringify({open: !(state && state.votingOpen)}) });
+      refreshVotingState(); renderVotingPanel();
+    } catch { alert("Unable to toggle voting state."); }
   };
 
-  // ---- Voter Logic: Render Voting Panel ----
   async function renderVotingPanel() {
-    if (!voterId) { // Don't render if not logged in as voter
-        positionsListEl.innerHTML = '';
-        return;
-    }
+    if (!voterId) { positionsListEl.innerHTML = ''; return; }
     try {
       const votingOpenState = await fetchAPI('/api/voting-state');
-      const resultsData = await fetchAPI(`/api/results`); // Contains all positions and contestants
-      
+      const resultsData = await fetchAPI(`/api/results`);
       positionsListEl.innerHTML = '';
       if (!resultsData || Object.keys(resultsData).length === 0) {
-        positionsListEl.innerHTML = "<div class='text-gray-600'>No positions available for voting at this time.</div>";
-        return;
+        positionsListEl.innerHTML = "<div class='text-gray-600'>No positions available.</div>"; return;
       }
-
-      let canStillVote = false; // Flag to see if any position is still votable by this user
-
+      let canStillVote = false;
       for (const [pkey, pdata] of Object.entries(resultsData)) {
         const hasVotedForThisPosition = voterVotes.hasOwnProperty(pkey);
         let positionHtml = `
           <div class="mb-6 p-4 border rounded-lg ${hasVotedForThisPosition ? 'bg-gray-50' : 'bg-white'}">
             <div class="font-bold text-xl mb-2 text-green-800">${pdata.label}</div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">`;
-
         if (Array.isArray(pdata.list) && pdata.list.length > 0) {
           pdata.list.forEach(cont => {
             const isDisabled = hasVotedForThisPosition || !(votingOpenState && votingOpenState.votingOpen);
-            if (!hasVotedForThisPosition) canStillVote = true; // If any position is not voted, they can still vote (if open)
-
+            if (!hasVotedForThisPosition) canStillVote = true;
             positionHtml += `
               <label class="card-label rounded-lg p-3 flex items-start space-x-3 cursor-pointer transition-all duration-150 ease-in-out hover:shadow-lg ${isDisabled ? 'opacity-70 cursor-not-allowed' : ''} ${voterVotes[pkey] == cont._id ? 'border-green-500 ring-2 ring-green-500' : 'border-gray-200'}">
-                <input type="radio" name="vote_${pkey}" value="${cont._id}" 
-                       ${voterVotes[pkey] == cont._id ? 'checked' : ''} 
-                       ${isDisabled ? 'disabled' : ''}
-                       class="form-radio h-5 w-5 text-green-600 mt-1">
-                <img src="${API_BASE_URL}${cont.photo || 'https://via.placeholder.com/100x50/CCCCCC/FFFFFF?text=No+Img'}" 
-                     alt="${cont.name}" class="contestant-photo object-cover rounded"/>
+                <input type="radio" name="vote_${pkey}" value="${cont._id}" ${voterVotes[pkey] == cont._id ? 'checked' : ''} ${isDisabled ? 'disabled' : ''} class="form-radio h-5 w-5 text-green-600 mt-1">
+                <img src="${API_BASE_URL}${cont.photo || 'https://via.placeholder.com/50x100/CCCCCC/FFFFFF?text=No+Img'}" alt="${cont.name}" class="contestant-photo object-cover rounded"/>
                 <div class="flex-1">
                   <span class="font-semibold text-md text-green-700">${cont.name}</span>
-                  <span class="block text-sm text-gray-500">${cont.description || 'No description.'}</span>
+                  <span class="block text-sm text-gray-500">${cont.description || ''}</span>
                 </div>
-              </label>
-            `;
+              </label>`;
           });
-        } else {
-          positionHtml += '<p class="text-sm text-gray-500 col-span-full">No contestants for this position.</p>';
-        }
-        positionHtml += `</div>`; // Close grid
-        if (hasVotedForThisPosition) {
-          positionHtml += `<div class="text-green-700 mt-3 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 inline-block mr-1"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>You have voted for this position.</div>`;
-        } else if (!(votingOpenState && votingOpenState.votingOpen)) {
-            positionHtml += `<div class="text-red-600 mt-3 font-semibold text-sm">Voting is currently closed for this position.</div>`;
-        }
-        positionHtml += `</div>`; // Close position block
+        } else { positionHtml += '<p class="text-sm text-gray-500 col-span-full">No contestants.</p>'; }
+        positionHtml += `</div>`;
+        if (hasVotedForThisPosition) positionHtml += `<div class="text-green-700 mt-3 font-semibold text-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 inline-block mr-1"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>Voted.</div>`;
+        else if (!(votingOpenState && votingOpenState.votingOpen)) positionHtml += `<div class="text-red-600 mt-3 font-semibold text-sm">Voting closed.</div>`;
+        positionHtml += `</div>`;
         positionsListEl.innerHTML += positionHtml;
       }
-      
       const submitVotesBtn = document.getElementById('submit-votes-btn');
       if (canStillVote && votingOpenState && votingOpenState.votingOpen) {
-        submitVotesBtn.disabled = false;
-        submitVotesBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitVotesBtn.disabled = false; submitVotesBtn.classList.remove('opacity-50', 'cursor-not-allowed');
       } else {
-        submitVotesBtn.disabled = true;
-        submitVotesBtn.classList.add('opacity-50', 'cursor-not-allowed');
-         if (!canStillVote && Object.keys(resultsData).length > 0) {
-            voterStatusEl.textContent = `Logged in as ${voterId}. You have voted for all available positions.`;
-        } else if (!(votingOpenState && votingOpenState.votingOpen)) {
-            voterStatusEl.textContent = `Logged in as ${voterId}. Voting is currently closed.`;
-        }
+        submitVotesBtn.disabled = true; submitVotesBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        if (!canStillVote && Object.keys(resultsData).length > 0) voterStatusEl.textContent = `Logged in as ${voterId}. All positions voted.`;
+        else if (!(votingOpenState && votingOpenState.votingOpen)) voterStatusEl.textContent = `Logged in as ${voterId}. Voting closed.`;
       }
-
     } catch (err) {
       console.error("Error rendering voting panel:", err);
-      positionsListEl.innerHTML = `<div>Error loading voting panel: ${err.message}. Please try refreshing.</div>`;
+      positionsListEl.innerHTML = `<div>Error loading panel: ${err.message}.</div>`;
     }
   }
 
-  // ---- Voter Logic: Vote Submission ----
   votingPanelForm.onsubmit = async (e) => {
     e.preventDefault();
     const currentVotesToSubmit = {};
-    // Collect votes only for positions not yet voted for.
     Array.from(document.querySelectorAll('[name^="vote_"]')).forEach(inp => {
       if (inp.checked) {
         const positionKey = inp.name.slice(5);
-        if (!voterVotes[positionKey]) { // Only include if not already in voterVotes
-          currentVotesToSubmit[positionKey] = inp.value;
-        }
+        if (!voterVotes[positionKey]) currentVotesToSubmit[positionKey] = inp.value;
       }
     });
-
     if (Object.keys(currentVotesToSubmit).length === 0) {
-      alert("You have not made any new selections or have already voted for these positions.");
-      return;
+      alert("No new selections or already voted."); return;
     }
-
     try {
-      const submissionResult = await fetchAPI(`/api/vote`, {
-        method: 'POST', body: JSON.stringify({ voterId, votes: currentVotesToSubmit })
-      });
-      // Update local voterVotes with the newly cast votes from submissionResult
-      // The backend should return all votes of the user (old + new)
-      voterVotes = submissionResult.votes || voterVotes; // Fallback to old voterVotes if something is wrong
-
-      alert("Your new votes have been recorded!");
-      await renderVotingPanel(); // Re-render to reflect submitted votes and disable voted sections
-      await renderResults(); // Update live results
-    } catch (err) {
-      alert(`Unable to submit votes: ${err.message}`);
-      console.error("Vote submission error:", err);
-    }
+      const submissionResult = await fetchAPI(`/api/vote`, { method: 'POST', body: JSON.stringify({ voterId, votes: currentVotesToSubmit }) });
+      voterVotes = submissionResult.votes || voterVotes;
+      alert("New votes recorded!");
+      await renderVotingPanel(); await renderResults();
+    } catch (err) { alert(`Vote submission error: ${err.message}`); console.error("Vote submission error:", err); }
   };
 
-  // ---- Live Results ----
   let resultsInterval;
   async function renderResults() {
     try {
       const res = await fetchAPI(`/api/results`);
       resultsDiv.innerHTML = '';
       if (!res || typeof res !== "object" || Object.keys(res).length === 0) {
-        resultsDiv.innerHTML = "<p class='text-gray-600'>No results available yet, or no contestants added.</p>";
-        return;
+        resultsDiv.innerHTML = "<p class='text-gray-600'>No results available.</p>"; return;
       }
       for (const [pkey, pdata] of Object.entries(res)) {
         resultsDiv.innerHTML += `<div class="mb-6 p-4 border rounded-lg bg-gray-50"><div class="font-bold text-xl mb-2 text-purple-700">${pdata.label}</div>`;
         const totalVotesInPosition = Array.isArray(pdata.list) ? pdata.list.reduce((acc, curr) => acc + curr.votes, 0) : 1;
-        
         if (Array.isArray(pdata.list) && pdata.list.length > 0) {
-          pdata.list.sort((a, b) => b.votes - a.votes); // Sort by votes descending
+          pdata.list.sort((a, b) => b.votes - a.votes);
           pdata.list.forEach(c => {
             const percent = totalVotesInPosition > 0 ? (c.votes / totalVotesInPosition * 100) : 0;
             resultsDiv.innerHTML += `
-              <div class="mb-3">
-                <div class="flex justify-between items-center mb-0.5">
-                  <span class="font-semibold text-purple-600">${c.name}</span>
-                  <span class="text-sm text-purple-600">${c.votes} votes (${percent.toFixed(1)}%)</span>
+              <div class="mb-3 pb-3 border-b last:border-b-0">
+                <div class="flex items-center space-x-3 mb-1">
+                  <img src="${API_BASE_URL}${c.photo || 'https://via.placeholder.com/50x50/CCCCCC/FFFFFF?text=No+Img'}" alt="${c.name}" class="result-contestant-photo rounded">
+                  <div class="flex-grow">
+                    <div class="flex justify-between items-center">
+                      <span class="font-semibold text-purple-600">${c.name}</span>
+                      <span class="text-sm text-purple-600">${c.votes} votes (${percent.toFixed(1)}%)</span>
+                    </div>
+                  </div>
                 </div>
                 <div class="w-full bg-gray-200 h-3 rounded-full">
                   <div class="progress-bar h-3 rounded-full" style="width:${percent.toFixed(1)}%;"></div>
                 </div>
-              </div>
-            `;
+              </div>`;
           });
-        } else {
-            resultsDiv.innerHTML += '<p class="text-sm text-gray-500">No contestants or votes for this position yet.</p>';
-        }
+        } else { resultsDiv.innerHTML += '<p class="text-sm text-gray-500">No contestants or votes.</p>'; }
         resultsDiv.innerHTML += `</div>`;
       }
     } catch (err) {
@@ -706,26 +565,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function startResultsPolling() {
     if (resultsInterval) clearInterval(resultsInterval);
-    renderResults(); // Initial call
-    resultsInterval = setInterval(renderResults, 5000); // Poll every 5 seconds
+    renderResults(); resultsInterval = setInterval(renderResults, 5000);
   }
-  function stopResultsPolling() {
-    if (resultsInterval) clearInterval(resultsInterval);
-  }
+  function stopResultsPolling() { if (resultsInterval) clearInterval(resultsInterval); }
 
-  // Initial calls
-  refreshVotingState(); // Get initial voting state for header
-  startResultsPolling(); // Start polling for results immediately
-
-  // Clear polling when page is hidden (e.g. tab switch) to save resources
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-        stopResultsPolling();
-    } else {
-        startResultsPolling();
-    }
-  });
-
+  refreshVotingState(); startResultsPolling();
+  document.addEventListener("visibilitychange", () => { document.hidden ? stopResultsPolling() : startResultsPolling(); });
 });
 </script>
 </body>
