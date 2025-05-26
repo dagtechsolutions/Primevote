@@ -1,4 +1,4 @@
-/* PrimeVote Custom Styles */
+/* PrimeVote Custom Styles - v7 - Improved Green, Round Buttons, Card Looks, Accessibility */
 
 body {
   background: linear-gradient(135deg, #38b000 0%, #70e000 100%);
@@ -54,11 +54,14 @@ h2 {
   letter-spacing: 1px;
 }
 
-label, .font-semibold {
+.font-semibold,
+label {
   color: #2d572c;
 }
 
-input[type="text"], textarea {
+input[type="text"],
+input[type="password"],
+textarea {
   border: 1.5px solid #70e000;
   border-radius: 8px;
   padding: 0.4em 0.6em;
@@ -66,7 +69,9 @@ input[type="text"], textarea {
   margin-bottom: 0.5em;
   transition: border-color 0.2s;
 }
-input[type="text"]:focus, textarea:focus {
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus {
   outline: none;
   border-color: #008000;
 }
@@ -75,23 +80,36 @@ input[type="file"] {
   margin-bottom: 0.5em;
 }
 
+/* Prime Green Rounded Buttons */
 button,
-input[type="submit"] {
+input[type="submit"],
+.prime-btn {
   background: linear-gradient(90deg, #008000 20%, #38b000 100%);
   color: #fff;
   border: none;
   font-weight: 600;
   padding: 0.6em 1.4em;
   margin-right: 0.4em;
-  /* Changed border-radius from 7px to 9999px for round effect */
-  border-radius: 9999px; /* Made buttons round */
+  border-radius: 9999px;
   transition: background 0.2s, transform 0.1s;
   cursor: pointer;
   box-shadow: 0 1.5px 6px 0 rgba(56,176,0,0.08);
+  font-size: 1rem;
 }
-button:hover, input[type="submit"]:hover {
+button:hover,
+input[type="submit"]:hover,
+.prime-btn:hover {
   background: linear-gradient(90deg, #38b000 10%, #008000 100%);
   transform: translateY(-2px) scale(1.04);
+}
+
+.toggle-on {
+  background: linear-gradient(90deg, #38b000 10%, #008000 100%) !important;
+  opacity: 1 !important;
+}
+.toggle-off {
+  background: linear-gradient(90deg, #008000 10%, #38b000 100%) !important;
+  opacity: 0.6 !important;
 }
 
 textarea {
@@ -112,11 +130,30 @@ label.bg-gray-100 {
   background: linear-gradient(120deg, #f0fff4 60%, #c4f0c5 100%);
   border: 1.5px solid #70e000;
   margin-bottom: 0.6rem;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  border-radius: 1rem;
+  box-shadow: 0 1px 4px 0 rgba(56,176,0,0.05);
 }
 label.bg-gray-100:hover {
   box-shadow: 0 2.5px 14px 0 rgba(56,176,0,0.10);
   border-color: #38b000;
+}
+
+label.bg-gray-100 input[type="radio"] {
+  accent-color: #38b000;
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.5em;
+}
+
+label.bg-gray-100 img {
+  border: 2.5px solid #70e000;
+  background: #eaffea;
+}
+
+ul {
+  padding-left: 0;
+  list-style-type: none;
 }
 
 /* Progress Bar */
@@ -141,12 +178,35 @@ label.bg-gray-100:hover {
   font-weight: 600;
 }
 
+.text-red-600 {
+  color: #d90429 !important;
+  font-weight: 600;
+}
+
+/* Avatar thumbnails in lists */
+img.rounded-full {
+  border-radius: 50% !important;
+  border: 2px solid #70e000;
+  object-fit: cover;
+  background: #eaffea;
+}
+
+/* Accessibility focus style for buttons and inputs */
+button:focus, input:focus, .prime-btn:focus {
+  outline: 3px solid #2d572c;
+  outline-offset: 2px;
+}
+
+/* Responsive */
 @media (max-width: 600px) {
   main {
     padding: 1rem 0.5rem 1.5rem 0.5rem;
   }
   header h1 {
     font-size: 2rem;
+  }
+  .grid-cols-2, .grid-cols-3 {
+    grid-template-columns: 1fr !important;
   }
 }
 
