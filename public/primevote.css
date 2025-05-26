@@ -1,217 +1,257 @@
-/* PrimeVote Custom Styles - v7 - Improved Green, Round Buttons, Card Looks, Accessibility */
+/* PrimeVote Custom Styles */
 
 body {
-  background: linear-gradient(135deg, #38b000 0%, #70e000 100%);
-  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); /* Lighter green gradient */
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  color: #333; /* Default text color for better readability */
+  line-height: 1.6; /* Improved line spacing for text blocks */
 }
 
 header {
-  background: linear-gradient(90deg, #008000 0%, #38b000 100%);
+  background: linear-gradient(90deg, #008000 0%, #38b000 100%); /* Original Green */
   color: #fff;
-  padding: 2rem 0 1rem 0;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem 0 1rem 0; /* Adjusted padding */
+  box-shadow: 0 4px 15px rgba(0, 64, 0, 0.1); /* Softer shadow */
   text-align: center;
 }
 
 header h1 {
-  font-size: 2.5rem;
+  font-size: 2.2rem; /* Slightly reduced for balance */
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1px; /* Reduced for readability */
   margin-bottom: 0.25em;
 }
 
-#vote-status {
-  font-size: 1.2rem;
+#vote-status { /* This is the one in the header */
+  font-size: 1.1rem; /* Adjusted size */
   font-weight: 500;
-  padding: 0.3em 1em;
-  border-radius: 15px;
+  padding: 0.4em 1.2em;
+  border-radius: 20px;
   display: inline-block;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.25);
   margin-top: 0.5em;
+  border: 1px solid rgba(255,255,255,0.3);
 }
 
 main {
-  max-width: 900px;
+  max-width: 960px; /* Slightly wider for more content */
   margin: 2rem auto;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 1.2rem;
-  box-shadow: 0 8px 40px 0 rgba(0,128,0,0.13), 0 1.5px 4px 0 rgba(0,0,0,0.07);
-  padding: 2rem 2.5rem 2.5rem 2.5rem;
+  background: #ffffff; /* Solid white for content background */
+  border-radius: 1rem; /* Consistent rounding */
+  box-shadow: 0 10px 50px rgba(0, 100, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 2rem; /* Adjusted padding */
 }
 
 section {
-  margin-bottom: 2.2rem;
+  margin-bottom: 2.5rem; /* Increased spacing between sections */
 }
 
-h2 {
-  color: #008000;
-  font-size: 1.6rem;
+h2 { /* Section titles */
+  color: #006400; /* Darker Green for titles */
+  font-size: 1.8rem; /* Prominent section titles */
   font-weight: 700;
-  margin-bottom: 1rem;
-  letter-spacing: 1px;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #70e000; /* Accent border */
+  letter-spacing: 0.5px;
 }
 
-.font-semibold,
-label {
+h3 { /* Sub-headings within sections */
+  color: #007000; /* Slightly lighter green for sub-headings */
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+h4 { /* Smaller sub-headings */
   color: #2d572c;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
 }
 
-input[type="text"],
-input[type="password"],
-textarea {
-  border: 1.5px solid #70e000;
-  border-radius: 8px;
-  padding: 0.4em 0.6em;
-  font-size: 1.05rem;
-  margin-bottom: 0.5em;
-  transition: border-color 0.2s;
+
+label, .font-semibold { /* General labels and bold text */
+  color: #166534; /* Tailwind green-800 for good contrast */
 }
-input[type="text"]:focus,
-input[type="password"]:focus,
-textarea:focus {
+.text-sm { font-size: 0.9rem; } /* Standard small text */
+.text-xs { font-size: 0.8rem; } /* Standard extra-small text */
+
+
+input[type="text"], input[type="password"], textarea {
+  border: 1px solid #9ae6b4; /* Lighter green border - Tailwind green-300 */
+  border-radius: 8px;
+  padding: 0.6em 0.8em; /* More padding */
+  font-size: 1rem;
+  margin-bottom: 0.5em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%; /* Make inputs take full width by default in their containers */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
   outline: none;
-  border-color: #008000;
+  border-color: #38b000; /* Focus border - Main green */
+  box-shadow: 0 0 0 2px rgba(56, 176, 0, 0.2); /* Focus ring */
 }
 
 input[type="file"] {
   margin-bottom: 0.5em;
+  font-size: 0.95rem;
+  padding: 0.3em;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 100%;
 }
 
-/* Prime Green Rounded Buttons */
 button,
-input[type="submit"],
-.prime-btn {
+input[type="submit"] { /* General button style */
   background: linear-gradient(90deg, #008000 20%, #38b000 100%);
   color: #fff;
   border: none;
   font-weight: 600;
-  padding: 0.6em 1.4em;
+  padding: 0.7em 1.5em; /* Increased padding */
   margin-right: 0.4em;
-  border-radius: 9999px;
-  transition: background 0.2s, transform 0.1s;
+  border-radius: 8px; /* Consistent rounding */
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
   cursor: pointer;
-  box-shadow: 0 1.5px 6px 0 rgba(56,176,0,0.08);
-  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(56,176,0,0.1);
+  font-size: 0.95rem;
 }
-button:hover,
-input[type="submit"]:hover,
-.prime-btn:hover {
+button:hover, input[type="submit"]:hover {
   background: linear-gradient(90deg, #38b000 10%, #008000 100%);
-  transform: translateY(-2px) scale(1.04);
+  transform: translateY(-1px) scale(1.02); /* Subtler hover effect */
+  box-shadow: 0 4px 12px rgba(56,176,0,0.15);
+}
+button:disabled, input[type="submit"]:disabled {
+    background: #a0aec0; /* Tailwind gray-500 */
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
-.toggle-on {
-  background: linear-gradient(90deg, #38b000 10%, #008000 100%) !important;
-  opacity: 1 !important;
-}
-.toggle-off {
-  background: linear-gradient(90deg, #008000 10%, #38b000 100%) !important;
-  opacity: 0.6 !important;
-}
 
 textarea {
-  min-height: 60px;
+  min-height: 70px; /* Slightly taller */
   resize: vertical;
-  width: 100%;
 }
 
-.bg-white {
+.bg-white { /* Used for sections */
   background: #fff;
-  border-radius: 1em;
-  box-shadow: 0 4px 30px 0 rgba(56,176,0,0.04), 0 0.5px 2px 0 rgba(0,0,0,0.04);
-  margin-bottom: 2rem;
+  border-radius: 1em; /* Consistent rounding */
+  box-shadow: 0 6px 25px rgba(56,176,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  margin-bottom: 2.5rem; /* Consistent margin */
 }
 
-/* Voting Cards */
-label.bg-gray-100 {
-  background: linear-gradient(120deg, #f0fff4 60%, #c4f0c5 100%);
-  border: 1.5px solid #70e000;
-  margin-bottom: 0.6rem;
-  transition: box-shadow 0.15s, border-color 0.15s;
-  border-radius: 1rem;
-  box-shadow: 0 1px 4px 0 rgba(56,176,0,0.05);
+/* Voting Cards & Labels */
+.card-label { /* Class for the main label wrapping radio, image, text in voting panel */
+  background: #f0fff4; /* Very light green */
+  border: 1px solid #a7f3d0; /* Tailwind green-200 */
+  border-radius: 0.75rem; /* Rounded corners */
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
-label.bg-gray-100:hover {
-  box-shadow: 0 2.5px 14px 0 rgba(56,176,0,0.10);
-  border-color: #38b000;
+.card-label:hover {
+  box-shadow: 0 4px 18px rgba(56,176,0,0.12);
+  border-color: #38b000; /* Main green */
 }
-
-label.bg-gray-100 input[type="radio"] {
-  accent-color: #38b000;
-  width: 1.2em;
-  height: 1.2em;
-  margin-right: 0.5em;
+.card-label input[type="radio"]:checked + img + div span:first-child { /* Style for selected contestant name */
+    font-weight: bold;
+    color: #008000;
 }
 
-label.bg-gray-100 img {
-  border: 2.5px solid #70e000;
-  background: #eaffea;
+
+/* Contestant Photo Styling */
+.contestant-photo {
+  width: 50px;
+  height: 100px;
+  object-fit: cover; /* Crop to fit, maintain aspect ratio */
+  border-radius: 6px; /* Slightly rounded corners */
+  border: 1px solid #ccc; /* Optional: adds a light border */
+  background-color: #f0f0f0; /* Placeholder background */
+}
+.admin-contestant-thumb { /* Smaller thumbnail for admin list */
+    width: 40px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-top: 4px;
+    border: 1px solid #ddd;
 }
 
-ul {
-  padding-left: 0;
-  list-style-type: none;
+
+/* Progress Bar for Results */
+.progress-bar { /* The moving part of the progress bar */
+  background: linear-gradient(90deg, #22c55e 0%, #86efac 100%) !important; /* Tailwind green-500 to green-300 */
+  height: 100%; /* Ensure it fills the parent's height */
 }
 
-/* Progress Bar */
-.bg-purple-600, .progress-bar {
-  background: linear-gradient(90deg, #008000 0%, #70e000 100%) !important;
+.w-full.bg-gray-200 { /* Container for the progress bar */
+  background: #e6ffe6 !important; /* Very light green background */
+  height: 12px !important; /* Increased height for better visibility */
+  border-radius: 6px; /* Rounded to match the bar */
 }
 
-.w-full.bg-gray-200 {
-  background: #e6ffe6 !important;
-  height: 8px !important;
-  border-radius: 5px;
+.flex.justify-between > span { /* Text for vote counts/percentages in results */
+  color: #15803d; /* Tailwind green-700 */
+  font-weight: 500; /* Slightly less bold than 600 */
+  font-size: 0.9rem;
 }
 
-.flex.justify-between > span {
-  color: #008000;
-  font-weight: 600;
+/* Status Messages (e.g., login status, form status) */
+.text-red-600 { color: #dc2626 !important; } /* Tailwind red-600 */
+.text-green-700 { color: #15803d !important; } /* Tailwind green-700 */
+.text-yellow-600 { color: #ca8a04 !important; } /* Tailwind yellow-600 */
+
+/* Admin specific list styling */
+#admin-contestant-list li, #admin-voters-list li {
+    background-color: #f9fafb; /* Tailwind gray-50 */
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb; /* Tailwind gray-200 */
+    border-radius: 0.5rem;
+}
+#admin-contestant-list li:hover, #admin-voters-list li:hover {
+    background-color: #f3f4f6; /* Tailwind gray-100 */
 }
 
-/* Voted label */
-.text-green-700 {
-  color: #38b000 !important;
-  font-weight: 600;
-}
 
-.text-red-600 {
-  color: #d90429 !important;
-  font-weight: 600;
-}
-
-/* Avatar thumbnails in lists */
-img.rounded-full {
-  border-radius: 50% !important;
-  border: 2px solid #70e000;
-  object-fit: cover;
-  background: #eaffea;
-}
-
-/* Accessibility focus style for buttons and inputs */
-button:focus, input:focus, .prime-btn:focus {
-  outline: 3px solid #2d572c;
-  outline-offset: 2px;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) { /* Medium devices */
   main {
-    padding: 1rem 0.5rem 1.5rem 0.5rem;
+    padding: 1.5rem 1.5rem;
   }
   header h1 {
     font-size: 2rem;
   }
-  .grid-cols-2, .grid-cols-3 {
-    grid-template-columns: 1fr !important;
+  h2 { font-size: 1.6rem; }
+  h3 { font-size: 1.3rem; }
+}
+
+@media (max-width: 600px) { /* Small devices */
+  main {
+    margin: 1rem auto;
+    padding: 1rem 1rem; /* More compact padding */
+  }
+  header h1 {
+    font-size: 1.8rem;
+  }
+  header {
+    padding: 1rem 0 0.5rem 0;
+  }
+  #vote-status {
+    font-size: 1rem;
+    padding: 0.3em 0.8em;
+  }
+  button, input[type="submit"] {
+    padding: 0.6em 1.2em;
+    font-size: 0.9rem;
+  }
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 { /* Ensure voting cards stack on small screens */
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
-::-webkit-input-placeholder { color: #b0e57c; }
-:-moz-placeholder { color: #b0e57c; }
-::-moz-placeholder { color: #b0e57c; }
-:-ms-input-placeholder { color: #b0e57c; }
-::placeholder { color: #b0e57c; }
+/* Placeholder text color - make it slightly darker for accessibility */
+::-webkit-input-placeholder { color: #6b7280; opacity: 0.8; } /* Tailwind gray-500 */
+:-moz-placeholder { color: #6b7280; opacity: 0.8; }
+::-moz-placeholder { color: #6b7280; opacity: 0.8; }
+:-ms-input-placeholder { color: #6b7280; opacity: 0.8; }
+::placeholder { color: #6b7280; opacity: 0.8; }
