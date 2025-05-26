@@ -114,7 +114,7 @@ textarea { min-height: 70px; resize: vertical; }
 @media (max-width: 600px) {
   main { margin: 1rem auto; padding: 1rem 1rem; } header h1 { font-size: 1.8rem; }
   header { padding: 1rem 0 0.5rem 0; } #vote-status { font-size: 1rem; padding: 0.3em 0.8em; }
-  button, input[type="submit"] { padding: 0.6em 1.2em; font-size: 0.9rem; }
+  button, input[type="submit"] { padding: 0.6em 1.2em; font-size: 0.9rem; color:#2e857f;}
   .grid-cols-1.sm\:grid-cols-2.md\:grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
 }
 ::-webkit-input-placeholder { color: #6b7280; opacity: 0.8; } :-moz-placeholder { color: #6b7280; opacity: 0.8; }
