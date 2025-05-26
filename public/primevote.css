@@ -83,7 +83,8 @@ input[type="submit"] {
   font-weight: 600;
   padding: 0.6em 1.4em;
   margin-right: 0.4em;
-  border-radius: 7px;
+  /* Changed border-radius from 7px to 9999px for round effect */
+  border-radius: 9999px; /* Made buttons round */
   transition: background 0.2s, transform 0.1s;
   cursor: pointer;
   box-shadow: 0 1.5px 6px 0 rgba(56,176,0,0.08);
